@@ -12,9 +12,7 @@ var db = require("../models");
 // =============================================================
 module.exports = function(app,  passport) {
 
-    // process the signup form
-    // app.post('/signup', do all our passport stuff here);
-    // process the signup form
+    // process the create family form
     app.post('/api/family/create', isLoggedIn, function(req, res) {
         console.log('create family');
         db.Family.create({
@@ -43,6 +41,43 @@ module.exports = function(app,  passport) {
         });
     });
 
+    // process the join family form
+    app.post('/api/family/join', isLoggedIn, function(req, res) {
+        console.log('join family');
+        // verify if family exists and user has correct credentials to join
+        db.Family.findOne({
+            where: {
+                name: req.body.famname,
+                secret_key: req.body.secretKey
+            }
+        }).then(function(family){
+           if(!family)
+           {
+               return done(null, false, req.flash("familyFindError", "Invalid Family"));
+           }
+           if(family.name === req.body.famname &&
+              family.secret_key === req.body.secretKey)
+           {
+               //add person to personfamily table
+               db.Personfamily.create({
+                   PersonId: req.body.personId,
+                   FamilyId: family.id
+               }).then(function (dbPersonFamily) {
+                   res.render('chatroom.ejs', {
+                       familyId : family.id, // get the family id out of session and pass to template
+                       personId: req.body.personId
+                   });
+               }).catch(function (error) {
+                   console.log("Error Message = ", error);
+                   return done(null, false, req.flash("createPersonFamilyError", "Error adding to person family"));
+               });
+           }
+           else {
+               return done(null, false, req.flash("familyFindError", "Invalid Family"));
+           }
+
+        });
+    });
 
     app.get('/family', isLoggedIn, function(req, res) {
         console.log('go to family');
