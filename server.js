@@ -50,7 +50,7 @@ require("./routes/user-api-routes.js")(app, passport);
 require("./routes/chat-api-routes.js")(app, passport);
 require("./routes/family-api-routes.js")(app, passport);
 
-db.sequelize.sync({ force: true }).then(function() {
+db.sequelize.sync({ force: false }).then(function() {
 	app.listen(PORT, function() {
 	  console.log("App listening on PORT " + PORT);
 	});
